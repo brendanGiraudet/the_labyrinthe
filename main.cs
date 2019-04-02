@@ -18,7 +18,7 @@ class Player
         int R = int.Parse(inputs[0]); // number of rows.
         int C = int.Parse(inputs[1]); // number of columns.
         int A = int.Parse(inputs[2]); // number of rounds between the time the alarm countdown is activated and the time the alarm goes off.
-
+        var game = new Game();
         // game loop
         while (true)
         {
@@ -27,13 +27,126 @@ class Player
             int KC = int.Parse(inputs[1]); // column where Kirk is located.
             for (int i = 0; i < R; i++)
             {
-                string ROW = Console.ReadLine(); // C of the characters in '#.TC?' (i.e. one line of the ASCII maze).
+                var row = Console.ReadLine();
+                game.Map.Add(row); // C of the characters in '#.TC?' (i.e. one line of the ASCII maze).
+                if (row.Contains('T'))
+                {
+                    game.Location.Y = i;
+                    game.Location.X = row.IndexOf('T');
+                }
             }
 
-            // Write an action using Console.WriteLine()
-            // To debug: Console.Error.WriteLine("Debug messages...");
+            game.Map.ForEach(r => { Console.Error.WriteLine(r); });
+            Console.Error.WriteLine(game.Location);
 
-            Console.WriteLine("RIGHT"); // Kirk's next move (UP DOWN LEFT or RIGHT).
+            var direction = "RIGHT";
+            if(game.CanMove(direction))
+            {
+                game.Move(direction);
+            }
+            else if (game.CanMove("DOWN"))
+            {
+                direction = "DOWN";
+                game.Move(direction);
+            }
+            else if(game.CanMove("LEFT"))
+            {
+                direction = "LEFT";
+                game.Move(direction);
+            }
+            else if (game.CanMove("UP"))
+            {
+                direction = "UP";
+                game.Move(direction);
+            }
+
+            Console.Error.WriteLine(game.Location);
+
+
+            Console.WriteLine(direction); // Kirk's next move (UP DOWN LEFT or RIGHT).
         }
+    }
+}
+class Game
+{
+    public List<string> Map { get; set; } = new List<string>();
+    public Location Location { get; set; } = new Location();
+
+    public bool CanMove(Location location)
+    {
+        return Map[location.Y][location.X].Equals('.') || Map[location.Y][location.X].Equals('C');
+    }
+
+    public bool CanMove(string direction)
+    {
+        var location = Location;
+        switch (direction)
+        {
+            case "RIGHT":
+                location.X++;
+                break;
+            case "LEFT":
+                location.X--;
+                break;
+            case "UP":
+                location.Y++;
+                break;
+            case "DOWN":
+                location.Y--;
+                break;
+            default:
+                break;
+        }
+        Console.Error.WriteLine(Location);
+        return CanMove(location);
+    }
+
+    public void Move(Location location)
+    {
+        var somestring = Map[Location.Y];
+        var ch = somestring.ToCharArray();
+        ch[Location.X] = '.';
+        Map[Location.Y] = new string(ch);
+
+        Location = location;
+
+        somestring = Map[Location.Y];
+        ch = somestring.ToCharArray();
+        ch[Location.X] = 'T';
+        Map[Location.Y] = new string(ch);
+    }
+
+    public void Move(string direction)
+    {
+        var location = Location;
+        switch (direction)
+        {
+            case "RIGHT":
+                location.X++;
+                break;
+            case "LEFT":
+                location.X--;
+                break;
+            case "UP":
+                location.Y++;
+                break;
+            case "DOWN":
+                location.Y--;
+                break;
+            default:
+                break;
+        }
+        Console.Error.WriteLine(Location);
+        Move(location);
+    }
+}
+class Location
+{
+    public int X { get; set; } = 0;
+    public int Y { get; set; } = 0;
+
+    public override string ToString()
+    {
+        return "X :" + X + " Y :" + Y;
     }
 }
