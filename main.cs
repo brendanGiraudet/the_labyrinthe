@@ -22,13 +22,14 @@ class Player
         // game loop
         while (true)
         {
+            game.Map.Clear();
             inputs = Console.ReadLine().Split(' ');
             int KR = int.Parse(inputs[0]); // row where Kirk is located.
             int KC = int.Parse(inputs[1]); // column where Kirk is located.
             for (int i = 0; i < R; i++)
             {
                 var row = Console.ReadLine();
-                game.Map.Add(row); // C of the characters in '#.TC?' (i.e. one line of the ASCII maze).
+                game.Map.Add(row);
                 if (row.Contains('T'))
                 {
                     game.Location.Y = i;
@@ -37,7 +38,6 @@ class Player
             }
 
             game.Map.ForEach(r => { Console.Error.WriteLine(r); });
-            Console.Error.WriteLine(game.Location);
 
             var direction = "RIGHT";
             if(game.CanMove(direction))
@@ -59,11 +59,12 @@ class Player
                 direction = "UP";
                 game.Move(direction);
             }
+            else
+            {
+                direction = "WAIT";
+            }
 
-            Console.Error.WriteLine(game.Location);
-
-
-            Console.WriteLine(direction); // Kirk's next move (UP DOWN LEFT or RIGHT).
+            Console.WriteLine(direction);
         }
     }
 }
@@ -97,7 +98,6 @@ class Game
             default:
                 break;
         }
-        Console.Error.WriteLine(Location);
         return CanMove(location);
     }
 
@@ -119,6 +119,12 @@ class Game
     public void Move(string direction)
     {
         var location = Location;
+
+        var somestring = Map[Location.Y];
+        var ch = somestring.ToCharArray();
+        ch[Location.X] = '.';
+        Map[Location.Y] = new string(ch);
+
         switch (direction)
         {
             case "RIGHT":
@@ -136,8 +142,11 @@ class Game
             default:
                 break;
         }
-        Console.Error.WriteLine(Location);
-        Move(location);
+
+        somestring = Map[location.Y];
+        ch = somestring.ToCharArray();
+        ch[location.X] = 'T';
+        Map[location.Y] = new string(ch);
     }
 }
 class Location
