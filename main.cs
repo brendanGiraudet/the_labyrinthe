@@ -30,34 +30,33 @@ class Player
             {
                 var row = Console.ReadLine();
                 game.Map.Add(row);
-                if (row.Contains('T'))
-                {
-                    game.Location.Y = i;
-                    game.Location.X = row.IndexOf('T');
-                }
             }
 
-            game.Map.ForEach(r => { Console.Error.WriteLine(r); });
+            if(game.Location == null)
+            {
+                game.Location = game.GetStartingPosition();
+            }
 
-            var direction = "RIGHT";
-            if(game.CanMove(direction))
+            var direction = "";
+            // chercher le C
+            if (!game.ControlRoomFinded())
             {
-                game.Move(direction);
+                direction = game.GetDirectionToSearchControlRoomLocation();
             }
-            else if (game.CanMove("DOWN"))
+            // aller au C
+            else if(!game.PassedInControlRoomLocation())
             {
-                direction = "DOWN";
-                game.Move(direction);
+                direction = game.GetDirectionToControlRoomLocation();
             }
-            else if(game.CanMove("LEFT"))
+            // aller au T
+            else
             {
-                direction = "LEFT";
-                game.Move(direction);
+                direction = game.GetDirectionToStartingPosition();
             }
-            else if (game.CanMove("UP"))
+            if(!string.IsNullOrEmpty(direction))
             {
-                direction = "UP";
                 game.Move(direction);
+                game.Map.ForEach(r => { Console.Error.WriteLine(r); });
             }
             else
             {
@@ -71,16 +70,131 @@ class Player
 class Game
 {
     public List<string> Map { get; set; } = new List<string>();
-    public Location Location { get; set; } = new Location();
+    public Location Location { get; set; } = null;
+    public bool ControlRoomPassed { get; set; } = false;
+
+    public bool ControlRoomFinded()
+    {
+        return GetClassRoomLocation() != null;
+    }
+    public bool PassedInControlRoomLocation()
+    {
+        if(IsControlRoom(Location))
+        {
+            ControlRoomPassed = true;
+        }
+
+        return ControlRoomPassed;
+    }
+    public string GetDirectionToSearchControlRoomLocation()
+    {
+        var direction = "";
+        if (CanMove("RIGHT"))
+        {
+            direction = "RIGHT";
+        }
+        else if (CanMove("DOWN"))
+        {
+            direction = "DOWN";
+        }
+        else if (CanMove("LEFT"))
+        {
+            direction = "LEFT";
+        }
+        else if (CanMove("UP"))
+        {
+            direction = "UP";
+        }
+
+        return direction;
+    }
+    public string GetDirectionToControlRoomLocation()
+    {
+        if(GetClassRoomLocation().X < Location.X && CanMove("LEFT"))
+        {
+            return "LEFT";
+        }
+        if (GetClassRoomLocation().X > Location.X && CanMove("RIGHT"))
+        {
+            return "RIGHT";
+        }
+        if (GetClassRoomLocation().Y < Location.Y && CanMove("DOWN"))
+        {
+            return "DOWN";
+        }
+        if (GetClassRoomLocation().Y > Location.Y && CanMove("UP"))
+        {
+            return "UP";
+        }
+
+        return GetDirectionToSearchControlRoomLocation();
+    }
+    public string GetDirectionToStartingPosition()
+    {
+        return GetDirectionToSearchControlRoomLocation();
+    }
+
+    public Location GetClassRoomLocation()
+    {
+        for (int i = 0; i < Map.Count(); i++)
+        {
+            var row = Map[i];
+            if (row.Contains('C'))
+            {
+                return new Location
+                {
+                    Y = i,
+                    X = row.IndexOf('C')
+                };
+            }
+        }
+        return null;
+    }
+
+    public Location GetStartingPosition()
+    {
+        for (int i = 0; i < Map.Count(); i++)
+        {
+            var row = Map[i];
+            if (row.Contains('T'))
+            {
+                return new Location
+                {
+                    Y = i,
+                    X = row.IndexOf('T')
+                };
+            }
+        }
+        return null;
+    }
+
+    public bool IsHallowSpace(Location location)
+    {
+        return Map[location.Y][location.X].Equals('.');
+    }
+
+    public bool IsControlRoom(Location location)
+    {
+        return Map[location.Y][location.X].Equals('C');
+    }
+
+    public bool IsUnknowCell(Location location)
+    {
+        return Map[location.Y][location.X].Equals('?');
+    }
 
     public bool CanMove(Location location)
     {
-        return Map[location.Y][location.X].Equals('.') || Map[location.Y][location.X].Equals('C');
+        return IsHallowSpace(location) || IsControlRoom(location);
     }
 
     public bool CanMove(string direction)
     {
-        var location = Location;
+        var location = new Location
+        {
+            X = Location.X,
+            Y = Location.Y
+        };
         switch (direction)
         {
             case "RIGHT":
@@ -101,52 +215,25 @@ class Game
         return CanMove(location);
     }
 
-    public void Move(Location location)
-    {
-        var somestring = Map[Location.Y];
-        var ch = somestring.ToCharArray();
-        ch[Location.X] = '.';
-        Map[Location.Y] = new string(ch);
-
-        Location = location;
-
-        somestring = Map[Location.Y];
-        ch = somestring.ToCharArray();
-        ch[Location.X] = 'T';
-        Map[Location.Y] = new string(ch);
-    }
-
     public void Move(string direction)
     {
-        var location = Location;
-
-        var somestring = Map[Location.Y];
-        var ch = somestring.ToCharArray();
-        ch[Location.X] = '.';
-        Map[Location.Y] = new string(ch);
-
         switch (direction)
         {
             case "RIGHT":
-                location.X++;
+                Location.X++;
                 break;
             case "LEFT":
-                location.X--;
+                Location.X--;
                 break;
             case "UP":
-                location.Y++;
+                Location.Y++;
                 break;
             case "DOWN":
-                location.Y--;
+                Location.Y--;
                 break;
             default:
                 break;
         }
-
-        somestring = Map[location.Y];
-        ch = somestring.ToCharArray();
-        ch[location.X] = 'T';
-        Map[location.Y] = new string(ch);
     }
 }
 class Location
